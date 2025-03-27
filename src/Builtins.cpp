@@ -88,9 +88,9 @@ class Concat : public Value {
 
 public:
   virtual double number() {
-    throw std::runtime_error("<assign> is non-numeric");
+    throw std::runtime_error("<concat> is non-numeric");
   }
-  virtual std::string string() { return "<assign>"; }
+  virtual std::string string() { return "<concat>"; }
   virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &a) {
     return std::make_shared<ConcatPartial>(i.run(a)->string());
   };
