@@ -4,7 +4,8 @@ Another toy programming language (no relation to Untitled Programming Language).
 
 ## Grammar
 ```
-<statement> ::= (<expr> | <assignment> | <func> | <call>) ";"
+<statement_list> ::= {<statement> ";"}
+<statement> ::= (<expr> | <assignment> | <func> | <call>)
 <assignment> ::= <expr> "=" <statement>
 <func> ::= <expr> "=>" <statement>
 <call> ::= <expr> <statement>

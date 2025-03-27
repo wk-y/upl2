@@ -5,6 +5,7 @@ module;
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 export module Parser;
 import Token;
@@ -16,6 +17,7 @@ export class Parser {
   upl2::Token peeked;
   bool peeking = false;
 
+public:
   upl2::Token &peek() {
     if (peeking)
       return peeked;
@@ -30,7 +32,6 @@ export class Parser {
     return peeked;
   }
 
-public:
   class ParseError : std::exception {
   public:
     const char *what() const noexcept { return "parse error"; };
@@ -87,6 +88,17 @@ public:
     default:
       return expr;
     }
+  }
+
+  std::vector<ast::Node> parse_statement_list() {
+    std::vector<ast::Node> result;
+    while (peek().type == Token::TypeSymbol || peek().type == Token::TypeLpar) {
+      result.push_back(parse_statement());
+      if (peek().type != Token::TypeSemicolon)
+        throw std::runtime_error("missing semicolon");
+      next();
+    }
+    return result;
   }
 };
 
