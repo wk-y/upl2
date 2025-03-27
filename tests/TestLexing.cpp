@@ -18,7 +18,7 @@ int main() {
           "puts: x;",
           {
               {Token::TypeSymbol, "puts"},
-              {Token::TypeColon, ":"},
+              {Token::TypeInfix, ":"},
               {Token::TypeSymbol, "x"},
               {Token::TypeSemicolon, ";"},
               {Token::TypeEOF, "EOF"},
@@ -29,7 +29,7 @@ int main() {
           "x = 1;",
           {
               {Token::TypeSymbol, "x"},
-              {Token::TypeEqual, "="},
+              {Token::TypeInfix, "="},
               {Token::TypeNumber, "1"},
               {Token::TypeSemicolon, ";"},
               {Token::TypeEOF, "EOF"},

@@ -15,8 +15,7 @@ export class Interpreter;
 
 export class CFunction;
 
-export typedef std::variant<double, ast::Function, std::shared_ptr<CFunction>>
-    Value;
+export typedef std::variant<double, std::shared_ptr<CFunction>> Value;
 
 export class CFunction {
 public:
@@ -36,11 +35,6 @@ public:
     return std::visit([this](auto &&a) -> Value { return run(a); }, node);
   }
 
-  Value run(ast::Assignment &a) {
-    variables[a.lhs.name] = std::make_unique<Value>(run(*a.rhs.get()));
-    return *variables[a.lhs.name].get();
-  }
-
   Value run(ast::Call &a) {
     auto fn = run(*a.functor.get());
 
@@ -49,11 +43,6 @@ public:
     }
 
     throw std::runtime_error("tried to call a non-function");
-  }
-
-  Value run(ast::Function &def) {
-    auto x = def;
-    return x;
   }
 
   Value run(ast::Number &n) { return n.value; }

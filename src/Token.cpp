@@ -1,5 +1,6 @@
 module;
 #include <cctype>
+#include <climits>
 #include <cstdio>
 #include <istream>
 
@@ -7,15 +8,28 @@ export module Token;
 
 namespace upl2 {
 
+constexpr bool issymbol(int x) {
+  switch (x) {
+  case '+':
+  case '-':
+  case '*':
+  case '/':
+  case '=':
+  case ':':
+  case '<':
+  case '>':
+    return true;
+  }
+  return false;
+}
+
 export class Token {
 public:
   enum Type {
     TypeError,
     TypeEOF,
     TypeSymbol,
-    TypeArrow,
-    TypeEqual,
-    TypeColon,
+    TypeInfix,
     TypeSemicolon,
     TypeLpar,
     TypeRpar,
@@ -67,27 +81,28 @@ public:
       return s;
     }
 
+    if (issymbol(c)) {
+      t = {
+          .type = TypeInfix,
+          .literal = "",
+      };
+      do {
+        t.literal += c;
+        c = s.get();
+      } while (issymbol(c));
+      s.unget();
+      return s;
+    }
+
     switch (c) {
     case ';':
       t = {TypeSemicolon, ";"};
-      break;
-    case ':':
-      t = {TypeColon, ":"};
       break;
     case '(':
       t = {TypeLpar, "("};
       break;
     case ')':
-      t = {TypeColon, ")"};
-      break;
-    case '=':
-      c = s.peek();
-      if (c == '>') {
-        s.get();
-        t = {TypeArrow, "=>"};
-      } else {
-        t = {TypeEqual, "="};
-      }
+      t = {TypeRpar, ")"};
       break;
     default:
       t = {TypeError, std::string{(char)c, 0}};

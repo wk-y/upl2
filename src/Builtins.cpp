@@ -47,11 +47,34 @@ public:
   };
 };
 
+class Assign : public CFunction {
+  class AssignPartial : public CFunction {
+  public:
+    AssignPartial(std::string &n) : name(n) {}
+
+    std::string name;
+    virtual Value run(Interpreter &i, ast::Node a) {
+      i.variables[name] = std::make_unique<Value>(i.run(a));
+      return *i.variables[name].get();
+    }
+  };
+
+public:
+  virtual Value run(Interpreter &, ast::Node a) {
+    auto sym = std::get_if<ast::Symbol>(&a);
+    if (!sym)
+      throw std::runtime_error("attempting to assign to non-symbol");
+    return std::shared_ptr<CFunction>(new AssignPartial(sym->name));
+  };
+};
+
 export void load_all(Interpreter &i) {
-  i.variables["add"] =
+  i.variables["+"] =
       std::make_unique<Value>(std::shared_ptr<CFunction>(new Add()));
   i.variables["print"] =
       std::make_unique<Value>(std::shared_ptr<CFunction>(new Print()));
+  i.variables["="] =
+      std::make_unique<Value>(std::shared_ptr<CFunction>(new Assign()));
 }
 
 } // namespace upl2::interpreter::builtins

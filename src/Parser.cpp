@@ -31,6 +31,8 @@ public:
     return peeked;
   }
 
+  bool done() { return peek().type == Token::TypeEOF; }
+
   class ParseError : std::exception {
   public:
     const char *what() const noexcept { return "parse error"; };
@@ -74,23 +76,12 @@ public:
 
   escapehatch:
     switch (peek().type) {
-    case Token::TypeArrow: {
-      next();
-      auto lhs = std::get_if<ast::Symbol>(expr.get());
-      if (lhs) {
-        return ast::Function(*lhs,
-                             std::make_unique<ast::Node>(parse_statement()));
-      }
-      throw std::runtime_error("non-symbol parameter");
-    }
-    case Token::TypeEqual: {
-      next();
-      auto lhs = std::get_if<ast::Symbol>(expr.get());
-      if (lhs) {
-        return ast::Assignment(*lhs,
-                               std::make_unique<ast::Node>(parse_statement()));
-      }
-      throw std::runtime_error("assignment to non-symbol");
+    case Token::TypeInfix: {
+      ast::Node infix = ast::Symbol{next().literal};
+      return ast::Call(
+          std::make_unique<ast::Node>(
+              ast::Call(std::make_unique<ast::Node>(infix), std::move(expr))),
+          std::make_unique<ast::Node>(parse_statement()));
     }
     case Token::TypeLpar:
     case Token::TypeSymbol:
