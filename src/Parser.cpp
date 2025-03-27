@@ -63,7 +63,7 @@ public:
       next();
       ast::Node stmt = peek().type == Token::TypeInfix
                            ? ast::Symbol{next().literal}
-                           : parse_statement();
+                           : parse_statement_body();
       if (peek().type != Token::TypeRpar)
         throw std::runtime_error("missing right parenthesis");
       next();
@@ -80,7 +80,7 @@ public:
     }
   }
 
-  ast::Node parse_statement() {
+  ast::Node parse_statement_body() {
     auto expr = std::make_unique<ast::Node>(parse_expression());
 
   escapehatch:
@@ -90,7 +90,7 @@ public:
       return ast::Call(
           std::make_unique<ast::Node>(
               ast::Call(std::make_unique<ast::Node>(infix), std::move(expr))),
-          std::make_unique<ast::Node>(parse_statement()));
+          std::make_unique<ast::Node>(parse_statement_body()));
     }
     case Token::TypeLpar:
     case Token::TypeSymbol:
@@ -107,22 +107,26 @@ public:
     }
   }
 
+  ast::Node parse_statement() {
+    if (peek().type != Token::TypeLpar)
+      throw std::runtime_error("expected left parenthesis");
+    next();
+
+    auto node = parse_statement_body();
+
+    if (peek().type != Token::TypeRpar)
+      throw std::runtime_error("missing right parenthesis");
+    next();
+    return node;
+  }
+
   std::vector<ast::Node> parse_statement_list() {
     std::vector<ast::Node> result;
     for (;;) {
-      switch (peek().type) {
-      case Token::TypeSymbol:
-      case Token::TypeLpar:
-      case Token::TypeNumber:
-      case Token::TypeString:
-        result.push_back(parse_statement());
-        if (peek().type != Token::TypeSemicolon)
-          throw std::runtime_error("missing semicolon");
-        next();
-        break;
-      default:
+      if (peek().type != Token::TypeLpar)
         return result;
-      }
+
+      result.push_back(parse_statement());
     }
   }
 };

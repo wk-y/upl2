@@ -15,10 +15,6 @@ int main() {
 
     std::cerr << "$ ";
     auto expr = p.parse_statement();
-    if (p.next().type != upl2::Token::TypeSemicolon) {
-      std::cerr << "missing semicolon\n";
-      continue;
-    }
 
     auto result = interpreter.run(expr);
 

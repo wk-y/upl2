@@ -7,7 +7,7 @@ import Token;
 
 int main() {
   auto tests = {
-      "print;", "print msg;", "add = a => b => plus a b;", "1;", "\"hi\";",
+      "(print)", "(print msg)", "(add = a => b => plus a b)", "(1)", "(\"hi\")",
   };
 
   for (auto &test : tests) {

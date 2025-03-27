@@ -12,10 +12,10 @@ int main() {
     std::string statements;
     std::initializer_list<std::variant<double, skip>> expected;
   } tests[] = {
-      {"x = 1 + 2; x + 4;", {3., 7.}},
-      {"x = 3; y = 5; x + y;", {3., 5., 8.}},
-      {"(x) = 1; x;", {1., 1.}},
-      {"(*) = (+); 2 * 3;", {skip{}, 5.}},
+      {"(x = 1 + 2) (x + 4)", {3., 7.}},
+      {"(x = 3) (y = 5) (x + y)", {3., 5., 8.}},
+      {"((x) = 1) (x)", {1., 1.}},
+      {"((*) = (+)) (2 * 3)", {skip{}, 5.}},
   };
 
   for (auto &test : tests) {
