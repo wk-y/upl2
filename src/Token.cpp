@@ -1,6 +1,5 @@
 module;
 #include <cctype>
-#include <climits>
 #include <cstdio>
 #include <istream>
 
@@ -8,6 +7,8 @@ export module Token;
 
 namespace upl2 {
 
+// Check if a character is a symbol.
+// Takes an int to distinguish x = EOF
 constexpr bool issymbol(int x) {
   switch (x) {
   case '+':

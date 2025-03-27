@@ -1,5 +1,4 @@
 module;
-#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -49,7 +48,7 @@ public:
   Value run(ast::Symbol &s) {
     if (variables.contains(s.name))
       return *variables[s.name].get();
-    std::runtime_error("variable not defined");
+    throw std::runtime_error("variable not defined");
   }
 };
 

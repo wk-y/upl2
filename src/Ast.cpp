@@ -1,6 +1,4 @@
 module;
-#include <algorithm>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <variant>
@@ -54,7 +52,5 @@ bool Call::operator==(Call &rhs) {
   return (this->functor.get() == rhs.functor.get()) &&
          this->operand.get() == rhs.operand.get();
 }
-
-NODE_DEF
 
 } // namespace upl2::ast
