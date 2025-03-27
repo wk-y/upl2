@@ -10,6 +10,7 @@ int main() {
       "print;",
       "print msg;",
       "add = a => b => plus a b;",
+      "1;",
   };
 
   for (auto &test : tests) {
@@ -19,13 +20,8 @@ int main() {
     std::string program = "print;";
 
     Parser p(&s);
-    try {
-      p.parse_statement_list();
-    } catch (...) {
-      std::cerr << "expected to parse but failed:\n";
-      std::cerr << test;
-      return 1;
-    }
+    p.parse_statement_list();
+
     if (p.peek().type != upl2::Token::TypeEOF) {
       std::cerr << "did not fully parse the input\n";
       std::cerr << test;

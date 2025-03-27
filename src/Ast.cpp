@@ -1,7 +1,7 @@
 module;
-
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <variant>
 
 export module Ast;
@@ -9,12 +9,13 @@ export module Ast;
 namespace upl2::ast {
 
 export class Symbol;
+export class Number;
 export class Assignment;
 export class Function;
 export class Call;
 
 #define NODE_DEF                                                               \
-  export typedef std::variant<Symbol, Assignment, Function, Call> Node;
+  export typedef std::variant<Symbol, Number, Assignment, Function, Call> Node;
 NODE_DEF
 
 class Symbol {
@@ -25,6 +26,15 @@ public:
   Symbol(std::string name_) : name(name_) {}
 
   bool operator==(Symbol &rhs) { return this->name == rhs.name; }
+};
+
+class Number {
+public:
+  double value;
+
+  Number(std::string literal) { std::istringstream(literal) >> value; }
+
+  bool operator==(Number &rhs) { return this->value == rhs.value; }
 };
 
 class Assignment {

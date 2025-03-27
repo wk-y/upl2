@@ -24,6 +24,17 @@ int main() {
               {Token::TypeEOF, "EOF"},
           },
       },
+      TestCase{
+          1,
+          "x = 1;",
+          {
+              {Token::TypeSymbol, "x"},
+              {Token::TypeEqual, "="},
+              {Token::TypeNumber, "1"},
+              {Token::TypeSemicolon, ";"},
+              {Token::TypeEOF, "EOF"},
+          },
+      },
   };
   for (auto &test : tests) {
     std::istringstream s(test.input);

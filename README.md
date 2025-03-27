@@ -9,5 +9,5 @@ Another toy programming language (no relation to Untitled Programming Language).
 <assignment> ::= <expr> "=" <statement>
 <func> ::= <expr> "=>" <statement>
 <call> ::= <expr> <statement>
-<expr> ::= <symbol> | "(" <statement> ")"
+<expr> ::= <symbol> | <number> | "(" <statement> ")"
 ```

@@ -19,6 +19,7 @@ public:
     TypeSemicolon,
     TypeLpar,
     TypeRpar,
+    TypeNumber,
   } type;
   std::string literal;
 
@@ -33,15 +34,35 @@ public:
       return s;
     }
 
+    if (std::isdigit(c)) {
+      t = {TypeNumber, ""};
+      do {
+        t.literal.push_back(c);
+        c = s.get();
+      } while (std::isdigit(c));
+
+      if (c != '.') {
+        s.unget();
+        return s;
+      }
+
+      t.literal.push_back('.');
+      while (std::isdigit((c = s.get()))) {
+        t.literal.push_back(c);
+      }
+      s.unget();
+      return s;
+    }
+
     if (std::isalpha(c)) {
       t = {
           .type = TypeSymbol,
           .literal = "",
       };
-      while (std::isalnum(c)) {
+      do {
         t.literal += c;
         c = s.get();
-      }
+      } while (std::isalnum(c));
       s.unget();
       return s;
     }
