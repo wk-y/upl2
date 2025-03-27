@@ -31,7 +31,6 @@ public:
     TypeEOF,
     TypeSymbol,
     TypeInfix,
-    TypeSemicolon,
     TypeLpar,
     TypeRpar,
     TypeNumber,
@@ -97,8 +96,6 @@ public:
     }
 
     switch (c) {
-    case ';':
-      t = {TypeSemicolon, ";"};
       break;
     case '(':
       t = {TypeLpar, "("};

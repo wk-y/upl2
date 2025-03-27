@@ -15,23 +15,22 @@ int main() {
   std::vector<TestCase> tests = {
       TestCase{
           1,
-          "puts: x;",
+          "(puts x)",
           {
+              {Token::TypeLpar, "("},
               {Token::TypeSymbol, "puts"},
-              {Token::TypeInfix, ":"},
               {Token::TypeSymbol, "x"},
-              {Token::TypeSemicolon, ";"},
+              {Token::TypeRpar, ")"},
               {Token::TypeEOF, "EOF"},
           },
       },
       TestCase{
           1,
-          "x = 1;",
+          "x = 1",
           {
               {Token::TypeSymbol, "x"},
               {Token::TypeInfix, "="},
               {Token::TypeNumber, "1"},
-              {Token::TypeSemicolon, ";"},
               {Token::TypeEOF, "EOF"},
           },
       },
