@@ -1,6 +1,10 @@
-add_library(Builtins builtins.cpp builtins.hpp)
-add_library(Interpreter interpreter.cpp interpreter.hpp)
-add_library(Value value.cpp value.hpp)
+add_library(Ast)
+target_sources(Ast PUBLIC FILE_SET CXX_MODULES FILES Ast.cpp)
 
-link_libraries(Builtins PUBLIC Interpreter)
-link_libraries(Interpreter PUBLIC Value)
+add_library(Token)
+target_sources(Token PUBLIC FILE_SET CXX_MODULES FILES Token.cpp)
+
+
+add_library(Parser)
+target_sources(Parser PUBLIC FILE_SET CXX_MODULES FILES Parser.cpp)
+target_link_libraries(Parser PUBLIC Token Ast)
