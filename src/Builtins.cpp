@@ -11,6 +11,17 @@ import Ast;
 
 namespace upl2::interpreter::builtins {
 
+class String : public Value {
+public:
+  String(std::string s) : value(s) {}
+  std::string value;
+  virtual double number() { return std::stod(value); };
+  virtual std::string string() { return value; };
+  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &) {
+    throw std::runtime_error("string is not callable");
+  }
+};
+
 class Add : public Value {
   class AddPartial : public CFunction {
   public:
@@ -72,9 +83,34 @@ public:
   };
 };
 
+class Concat : public Value {
+  class ConcatPartial : public Value {
+  public:
+    ConcatPartial(std::string s) : first(s) {};
+    std::string first;
+    virtual double number() {
+      throw std::runtime_error("<concat partial> is non-numeric");
+    }
+    virtual std::string string() { return "<concat partial>"; }
+    virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &a) {
+      return std::make_shared<String>(first + i.run(a)->string());
+    };
+  };
+
+public:
+  virtual double number() {
+    throw std::runtime_error("<assign> is non-numeric");
+  }
+  virtual std::string string() { return "<assign>"; }
+  virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &a) {
+    return std::make_shared<ConcatPartial>(i.run(a)->string());
+  };
+};
+
 export void load_all(Interpreter &i) {
   i.variables["+"] = std::make_shared<Add>();
   i.variables["="] = std::make_unique<Assign>();
+  i.variables["concat"] = std::make_unique<Concat>();
 }
 
 } // namespace upl2::interpreter::builtins
