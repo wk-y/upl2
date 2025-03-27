@@ -50,19 +50,29 @@ public:
       auto sym = parse_symbol();
 
       switch (peek().type) {
-      case Token::TypeArrow:
-        next();
-        return ast::Function{
-            std::make_unique<ast::Node>(sym),
-            std::make_unique<ast::Node>(parse_statement()),
-        };
-      case Token::TypeEqual:
-        return ast::Assignment{
-            std::make_unique<ast::Node>(sym),
-            std::make_unique<ast::Node>(parse_statement()),
-        };
-      default:
+      case Token::TypeSemicolon:
         return sym;
+      case Token::TypeArrow: {
+        next();
+        auto expr = ast::Function{
+            std::make_unique<ast::Node>(std::move(sym)),
+            std::make_unique<ast::Node>(parse_statement()),
+        };
+        if (next().type != Token::TypeSemicolon)
+          throw std::runtime_error("missing semicolon");
+        return expr;
+      }
+      case Token::TypeEqual: {
+        auto expr = ast::Assignment{
+            std::make_unique<ast::Node>(sym),
+            std::make_unique<ast::Node>(parse_statement()),
+        };
+        if (next().type != Token::TypeSemicolon)
+          throw std::runtime_error("missing semicolon");
+        return expr;
+      }
+      default:
+        throw std::runtime_error("missing semicolon");
       }
     }
     default:

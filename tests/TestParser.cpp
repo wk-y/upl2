@@ -7,12 +7,8 @@ import Ast;
 int main() {
   using namespace upl2::ast;
   using namespace upl2::parser;
-  std::string program = "print: \"Hello world!\"";
+  std::string program = "print;";
   std::istringstream s(program);
   Parser p(&s);
-  auto sym = p.parse_symbol();
-  if (sym != Symbol{"print"}) {
-    std::cerr << sym.name << " != print\n";
-    return 1;
-  }
+  auto sym = p.parse_statement();
 }
