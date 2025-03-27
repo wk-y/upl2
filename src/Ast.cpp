@@ -9,9 +9,10 @@ namespace upl2::ast {
 
 export class Symbol;
 export class Number;
+export class StringNode;
 export class Call;
 
-export typedef std::variant<Symbol, Number, Call> Node;
+export typedef std::variant<Symbol, Number, StringNode, Call> Node;
 
 export class Symbol {
 
@@ -31,6 +32,16 @@ public:
   Number(std::string literal) { std::istringstream(literal) >> value; }
 
   bool operator==(Number &rhs) { return this->value == rhs.value; }
+};
+
+export class StringNode {
+public:
+  std::string value;
+
+  StringNode(const StringNode &rhs) = default;
+  StringNode(std::string literal) : value(literal) {}
+
+  bool operator==(StringNode &rhs) { return this->value == rhs.value; }
 };
 
 export class Call {

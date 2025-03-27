@@ -50,6 +50,17 @@ public:
   };
 };
 
+export class String : public Value {
+public:
+  String(std::string s) : value(s) {}
+  std::string value;
+  virtual double number() { return std::stod(value); };
+  virtual std::string string() { return value; };
+  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &) {
+    throw std::runtime_error("string is not callable");
+  }
+};
+
 export class CFunction : public Value {
 public:
   virtual double number() {
@@ -74,6 +85,10 @@ public:
 
   std::shared_ptr<Value> run(ast::Number &n) {
     return std::unique_ptr<Value>(new Number(n.value));
+  }
+
+  std::shared_ptr<Value> run(ast::StringNode &s) {
+    return std::make_shared<String>(s.value);
   }
 
   std::shared_ptr<Value> run(ast::Symbol &s) {

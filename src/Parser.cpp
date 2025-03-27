@@ -51,6 +51,12 @@ public:
     throw ParseError();
   }
 
+  ast::StringNode parse_string() {
+    if (peek().type == upl2::Token::TypeString)
+      return next().literal;
+    throw ParseError();
+  }
+
   ast::Node parse_expression() {
     switch (peek().type) {
     case Token::TypeLpar: {
@@ -67,6 +73,8 @@ public:
       return parse_symbol();
     case Token::TypeNumber:
       return parse_number();
+    case Token::TypeString:
+      return parse_string();
     default:
       throw ParseError();
     }
@@ -86,7 +94,8 @@ public:
     }
     case Token::TypeLpar:
     case Token::TypeSymbol:
-    case Token::TypeNumber: {
+    case Token::TypeNumber:
+    case Token::TypeString: {
       expr = std::make_unique<ast::Node>(ast::Call{
           std::make_unique<ast::Node>(std::move(*expr.get())),
           std::make_unique<ast::Node>(parse_expression()),
@@ -100,14 +109,21 @@ public:
 
   std::vector<ast::Node> parse_statement_list() {
     std::vector<ast::Node> result;
-    while (peek().type == Token::TypeSymbol || peek().type == Token::TypeLpar ||
-           peek().type == Token::TypeNumber) {
-      result.push_back(parse_statement());
-      if (peek().type != Token::TypeSemicolon)
-        throw std::runtime_error("missing semicolon");
-      next();
+    for (;;) {
+      switch (peek().type) {
+      case Token::TypeSymbol:
+      case Token::TypeLpar:
+      case Token::TypeNumber:
+      case Token::TypeString:
+        result.push_back(parse_statement());
+        if (peek().type != Token::TypeSemicolon)
+          throw std::runtime_error("missing semicolon");
+        next();
+        break;
+      default:
+        return result;
+      }
     }
-    return result;
   }
 };
 

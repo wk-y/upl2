@@ -11,17 +11,6 @@ import Ast;
 
 namespace upl2::interpreter::builtins {
 
-class String : public Value {
-public:
-  String(std::string s) : value(s) {}
-  std::string value;
-  virtual double number() { return std::stod(value); };
-  virtual std::string string() { return value; };
-  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &) {
-    throw std::runtime_error("string is not callable");
-  }
-};
-
 class Add : public Value {
   class AddPartial : public CFunction {
   public:

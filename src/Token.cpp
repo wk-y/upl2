@@ -35,6 +35,7 @@ public:
     TypeLpar,
     TypeRpar,
     TypeNumber,
+    TypeString,
   } type;
   std::string literal;
 
@@ -104,6 +105,32 @@ public:
       break;
     case ')':
       t = {TypeRpar, ")"};
+      break;
+    case '"':
+      t = {TypeString, ""};
+      for (;;) {
+        c = s.get();
+        if (c == EOF) {
+          t.type = TypeError;
+          break;
+        }
+
+        if (c == '"') {
+          break;
+        }
+
+        if (c == '\\') {
+          c = s.get();
+          if (c == EOF) {
+            t.type = TypeError;
+            break;
+          }
+          continue;
+        }
+
+        t.literal.push_back(c);
+      }
+
       break;
     default:
       t = {TypeError, std::string{(char)c, 0}};
