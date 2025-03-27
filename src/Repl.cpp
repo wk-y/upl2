@@ -1,8 +1,11 @@
+#include <cctype>
 #include <iostream>
+#include <vector>
 import Interpreter;
 import Parser;
 import Token;
 import Builtins;
+import Ast;
 
 int main() {
   using namespace upl2::parser;
@@ -14,10 +17,26 @@ int main() {
     Parser p(&std::cin);
 
     std::cerr << "$ ";
-    auto expr = p.parse_statement();
 
-    auto result = interpreter.run(expr);
+    // Read statements, stopping at a new line
+    std::vector<upl2::ast::Node> statements;
+    statements.push_back(p.parse_statement());
+    for (;;) {
+      auto c = std::cin.get();
+      if (c == EOF)
+        break;
+      if (c == '\n')
+        break;
+      if (std::isspace(c))
+        continue;
+      std::cin.unget();
+      statements.push_back(p.parse_statement());
+    }
 
-    std::cout << result << "\n";
+    // Evaluate
+    for (auto &statement : statements) {
+      auto result = interpreter.run(statement);
+      std::cout << result << "\n";
+    }
   }
 }
