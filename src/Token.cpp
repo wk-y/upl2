@@ -17,6 +17,8 @@ public:
     TypeEqual,
     TypeColon,
     TypeSemicolon,
+    TypeLpar,
+    TypeRpar,
   } type;
   std::string literal;
 
@@ -50,6 +52,12 @@ public:
       break;
     case ':':
       t = {TypeColon, ":"};
+      break;
+    case '(':
+      t = {TypeLpar, "("};
+      break;
+    case ')':
+      t = {TypeColon, ")"};
       break;
     case '=':
       c = s.peek();

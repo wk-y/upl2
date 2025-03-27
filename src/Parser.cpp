@@ -44,33 +44,48 @@ public:
     throw ParseError();
   }
 
+  ast::Node parse_expression() {
+    switch (peek().type) {
+    case Token::TypeLpar: {
+      ast::Node stmt = parse_statement();
+      if (peek().type != Token::TypeRpar)
+        throw std::runtime_error("missing right parenthesis");
+      next();
+      return stmt;
+    }
+    case Token::TypeSymbol:
+      return parse_symbol();
+    default:
+      throw ParseError();
+    }
+  }
+
   ast::Node parse_statement() {
-    auto sym = parse_symbol();
+    auto expr = parse_expression();
 
     switch (peek().type) {
-    case Token::TypeSemicolon:
-      return sym;
     case Token::TypeArrow: {
       next();
-      auto expr = ast::Function{
-          std::make_unique<ast::Node>(std::move(sym)),
+      return ast::Function{
+          std::make_unique<ast::Node>(std::move(expr)),
           std::make_unique<ast::Node>(parse_statement()),
       };
-      if (next().type != Token::TypeSemicolon)
-        throw std::runtime_error("missing semicolon");
-      return expr;
     }
     case Token::TypeEqual: {
-      auto expr = ast::Assignment{
-          std::make_unique<ast::Node>(sym),
+      next();
+      return ast::Assignment{
+          std::make_unique<ast::Node>(std::move(expr)),
           std::make_unique<ast::Node>(parse_statement()),
       };
-      if (next().type != Token::TypeSemicolon)
-        throw std::runtime_error("missing semicolon");
-      return expr;
     }
+    case Token::TypeLpar:
+    case Token::TypeSymbol:
+      return ast::Call{
+          std::make_unique<ast::Node>(std::move(expr)),
+          std::make_unique<ast::Node>(parse_statement()),
+      };
     default:
-      throw std::runtime_error("missing semicolon");
+      return expr;
     }
   }
 };
