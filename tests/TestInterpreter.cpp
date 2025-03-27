@@ -7,12 +7,15 @@ import Interpreter;
 import Builtins;
 
 int main() {
+  struct skip {};
   struct Test {
     std::string statements;
-    std::initializer_list<double> expected;
+    std::initializer_list<std::variant<double, skip>> expected;
   } tests[] = {
-      {"x = 1 + 2; x + 4;", {3, 7}},
-      {"x = 3; y = 5; x + y;", {3, 5, 8}},
+      {"x = 1 + 2; x + 4;", {3., 7.}},
+      {"x = 3; y = 5; x + y;", {3., 5., 8.}},
+      {"(x) = 1; x;", {1., 1.}},
+      {"(*) = (+); 2 * 3;", {skip{}, 5.}},
   };
 
   for (auto &test : tests) {
@@ -39,14 +42,19 @@ int main() {
 
     for (auto &expr : statements) {
       auto result = i.run(expr);
-      auto rptr = std::get_if<double>(&result);
-      if (!rptr) {
-        std::cerr << "expected double\n";
-        return 1;
-      }
-      if (*rptr != *expected) {
-        std::cerr << "expected " << *expected << ", got " << *rptr << ".\n";
-        return 1;
+
+      if (std::get_if<skip>(expected)) {
+        // skip
+      } else if (auto exp = std::get_if<double>(expected)) {
+        auto rptr = std::get_if<double>(&result);
+        if (!rptr) {
+          std::cerr << "expected double\n";
+          return 1;
+        }
+        if (*rptr != *exp) {
+          std::cerr << "expected " << *exp << ", got " << *rptr << ".\n";
+          return 1;
+        }
       }
       expected++;
     }

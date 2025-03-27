@@ -8,7 +8,7 @@ Another toy programming language (no relation to Untitled Programming Language).
 <statement> ::= (<expr> | <call> | <infix_call>)
 <call> ::= <expr> <expr> {<expr>}
 <infix_call> ::= <symbol> <infix> <statement>
-<expr> ::= <symbol> | <number> | "(" <statement> ")"
+<expr> ::= <symbol> | <number> | "(" <statement> ")" | "(" <infix> ")"
 <symbol> ::= [a-Z][a-Z0-9]*
 <number> ::= [0-9]+(\.[0-9]*)?
 <infix> ::= [+-*/=:<>]+

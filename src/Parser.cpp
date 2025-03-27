@@ -55,7 +55,9 @@ public:
     switch (peek().type) {
     case Token::TypeLpar: {
       next();
-      ast::Node stmt = parse_statement();
+      ast::Node stmt = peek().type == Token::TypeInfix
+                           ? ast::Symbol{next().literal}
+                           : parse_statement();
       if (peek().type != Token::TypeRpar)
         throw std::runtime_error("missing right parenthesis");
       next();
