@@ -1,7 +1,5 @@
 module;
-#include <cstring>
 #include <exception>
-#include <format>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -39,7 +37,7 @@ public:
   std::istream *s;
   Parser(std::istream *s_) : s(s_) {};
 
-  upl2::ast::Symbol parse_symbol() {
+  ast::Symbol parse_symbol() {
     if (peek().type == upl2::Token::TypeSymbol)
       return {next().literal};
     throw ParseError();
