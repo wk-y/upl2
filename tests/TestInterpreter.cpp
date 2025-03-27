@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 #include <variant>
 import Parser;
@@ -11,6 +12,11 @@ int main() {
   auto result = i.run(expr);
   auto rptr = std::get_if<double>(&result);
   if (!rptr) {
+    std::cerr << "expected double\n";
+    return 1;
+  }
+  if (*rptr != 1) {
+    std::cerr << "expected 1, got " << *rptr << ".\n";
     return 1;
   }
 }
