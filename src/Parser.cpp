@@ -53,6 +53,7 @@ public:
   ast::Node parse_expression() {
     switch (peek().type) {
     case Token::TypeLpar: {
+      next();
       ast::Node stmt = parse_statement();
       if (peek().type != Token::TypeRpar)
         throw std::runtime_error("missing right parenthesis");
@@ -69,12 +70,13 @@ public:
   }
 
   ast::Node parse_statement() {
-    auto expr = parse_expression();
+    auto expr = std::make_unique<ast::Node>(parse_expression());
 
+  escapehatch:
     switch (peek().type) {
     case Token::TypeArrow: {
       next();
-      auto lhs = std::get_if<ast::Symbol>(&expr);
+      auto lhs = std::get_if<ast::Symbol>(expr.get());
       if (lhs) {
         return ast::Function(*lhs,
                              std::make_unique<ast::Node>(parse_statement()));
@@ -83,7 +85,7 @@ public:
     }
     case Token::TypeEqual: {
       next();
-      auto lhs = std::get_if<ast::Symbol>(&expr);
+      auto lhs = std::get_if<ast::Symbol>(expr.get());
       if (lhs) {
         return ast::Assignment(*lhs,
                                std::make_unique<ast::Node>(parse_statement()));
@@ -92,13 +94,15 @@ public:
     }
     case Token::TypeLpar:
     case Token::TypeSymbol:
-    case Token::TypeNumber:
-      return ast::Call{
-          std::make_unique<ast::Node>(std::move(expr)),
-          std::make_unique<ast::Node>(parse_statement()),
-      };
+    case Token::TypeNumber: {
+      expr = std::make_unique<ast::Node>(ast::Call{
+          std::make_unique<ast::Node>(std::move(*expr.get())),
+          std::make_unique<ast::Node>(parse_expression()),
+      });
+      goto escapehatch;
+    }
     default:
-      return expr;
+      return *expr.get();
     }
   }
 

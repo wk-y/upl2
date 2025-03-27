@@ -8,6 +8,6 @@ Another toy programming language (no relation to Untitled Programming Language).
 <statement> ::= (<expr> | <assignment> | <func> | <call>)
 <assignment> ::= <symbol> "=" <statement>
 <func> ::= <symbol> "=>" <statement>
-<call> ::= <expr> <statement>
+<call> ::= <expr> <expr> {<expr>}
 <expr> ::= <symbol> | <number> | "(" <statement> ")"
 ```

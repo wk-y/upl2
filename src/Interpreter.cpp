@@ -1,6 +1,7 @@
 module;
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -12,18 +13,25 @@ namespace upl2::interpreter {
 
 export class Interpreter;
 
-class Function;
+export class CFunction;
 
-typedef std::variant<double, ast::Function> Value;
+export typedef std::variant<double, ast::Function, std::shared_ptr<CFunction>>
+    Value;
 
-class Function : public std::function<Value(Interpreter &, ast::Node &)> {};
+export class CFunction {
+public:
+  virtual ~CFunction() = 0;
+  virtual Value run(Interpreter &, ast::Node) = 0;
+};
+
+CFunction::~CFunction() {}
 
 // typedef std::variant<double, Function> Value;
 
 export class Interpreter {
+public:
   std::unordered_map<std::string, std::unique_ptr<Value>> variables;
 
-public:
   Value run(ast::Node &node) {
     return std::visit([this](auto &&a) -> Value { return run(a); }, node);
   }
@@ -35,11 +43,12 @@ public:
 
   Value run(ast::Call &a) {
     auto fn = run(*a.functor.get());
-    // auto f = std::get_if<Function>(&fn);
-    // if (!f)
-    //   throw std::runtime_error("tried to call a non-function");
-    // return (*f)(*this, *a.operand.get());
-    return double(0); // fixme
+
+    if (auto f = std::get_if<std::shared_ptr<CFunction>>(&fn)) {
+      return f->get()->run(*this, *a.operand);
+    }
+
+    throw std::runtime_error("tried to call a non-function");
   }
 
   Value run(ast::Function &def) {
@@ -48,7 +57,11 @@ public:
   }
 
   Value run(ast::Number &n) { return n.value; }
-  Value run(ast::Symbol &s) { return *variables[s.name].get(); }
+  Value run(ast::Symbol &s) {
+    if (variables.contains(s.name))
+      return *variables[s.name].get();
+    std::runtime_error("variable not defined");
+  }
 };
 
 } // namespace upl2::interpreter

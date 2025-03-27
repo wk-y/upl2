@@ -7,5 +7,5 @@ target_link_libraries(TestParser PUBLIC Parser Ast Token)
 add_test(NAME TestParser COMMAND TestParser)
 
 add_executable(TestInterpreter TestInterpreter.cpp)
-target_link_libraries(TestInterpreter PUBLIC Interpreter Ast Parser)
+target_link_libraries(TestInterpreter PUBLIC Interpreter Ast Parser Builtins)
 add_test(NAME TestInterpreter COMMAND TestInterpreter)
