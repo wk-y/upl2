@@ -6,8 +6,8 @@ Another toy programming language (no relation to Untitled Programming Language).
 ```
 <statement_list> ::= {<statement> ";"}
 <statement> ::= (<expr> | <assignment> | <func> | <call>)
-<assignment> ::= <expr> "=" <statement>
-<func> ::= <expr> "=>" <statement>
+<assignment> ::= <symbol> "=" <statement>
+<func> ::= <symbol> "=>" <statement>
 <call> ::= <expr> <statement>
 <expr> ::= <symbol> | <number> | "(" <statement> ")"
 ```

@@ -3,6 +3,7 @@ module;
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 
 export module Parser;
@@ -73,17 +74,21 @@ public:
     switch (peek().type) {
     case Token::TypeArrow: {
       next();
-      return ast::Function{
-          std::make_unique<ast::Node>(std::move(expr)),
-          std::make_unique<ast::Node>(parse_statement()),
-      };
+      auto lhs = std::get_if<ast::Symbol>(&expr);
+      if (lhs) {
+        return ast::Function(*lhs,
+                             std::make_unique<ast::Node>(parse_statement()));
+      }
+      throw std::runtime_error("non-symbol parameter");
     }
     case Token::TypeEqual: {
       next();
-      return ast::Assignment{
-          std::make_unique<ast::Node>(std::move(expr)),
-          std::make_unique<ast::Node>(parse_statement()),
-      };
+      auto lhs = std::get_if<ast::Symbol>(&expr);
+      if (lhs) {
+        return ast::Assignment(*lhs,
+                               std::make_unique<ast::Node>(parse_statement()));
+      }
+      throw std::runtime_error("assignment to non-symbol");
     }
     case Token::TypeLpar:
     case Token::TypeSymbol:
