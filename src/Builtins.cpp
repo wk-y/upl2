@@ -2,6 +2,7 @@ module;
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <unordered_map>
 #include <variant>
 
 export module Builtins;
@@ -10,67 +11,70 @@ import Ast;
 
 namespace upl2::interpreter::builtins {
 
-class Add : public CFunction {
+class Add : public Value {
   class AddPartial : public CFunction {
   public:
-    AddPartial(double v_) : v(v_) {}
-    double v;
-    virtual Value run(Interpreter &i, ast::Node a) {
-      auto value = i.run(a);
-      auto vptr = std::get_if<double>(&value);
-      if (!vptr)
-        std::runtime_error("attempted to add non-number");
-      return double(v + *vptr);
+    AddPartial(double v) : acc(v) {}
+    virtual ~AddPartial() = default;
+    double acc;
+    virtual double number() {
+      throw std::runtime_error("<add> is non-numeric");
     }
+    virtual std::string string() { return "<add>"; };
+    virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &n) {
+      auto v = i.run(n);
+      return std::make_shared<Number>(acc + v->number());
+    };
   };
 
 public:
-  virtual Value run(Interpreter &i, ast::Node a) {
-    auto value = i.run(a);
-    auto vptr = std::get_if<double>(&value);
-    if (!vptr)
-      std::runtime_error("attempted to add non-number");
-    return std::shared_ptr<CFunction>(new AddPartial(*vptr));
+  virtual ~Add() = default;
+  virtual double number() { throw std::runtime_error("<add> is non-numeric"); }
+  virtual std::string string() { return "<add>"; };
+  virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &n) {
+    return std::make_shared<AddPartial>(i.run(n)->number());
   };
 };
 
-class Print : public CFunction {
-public:
-  virtual Value run(Interpreter &i, ast::Node a) {
-    auto value = i.run(a);
-    std::cout << value;
-    return std::shared_ptr<CFunction>(new Print());
-  };
-};
+// class Print : public CFunction {
+// public:
+//   virtual Value run(Interpreter &i, ast::Node a) {
+//     auto value = i.run(a);
+//     std::cout << value;
+//     return std::shared_ptr<CFunction>(new Print());
+//   };
+// };
 
-class Assign : public CFunction {
-  class AssignPartial : public CFunction {
+class Assign : public Value {
+  class AssignPartial : public Value {
   public:
-    AssignPartial(std::string &n) : name(n) {}
-
-    std::string name;
-    virtual Value run(Interpreter &i, ast::Node a) {
-      i.variables[name] = std::make_unique<Value>(i.run(a));
-      return *i.variables[name].get();
+    AssignPartial(std::string s) : symbol_name(s) {};
+    std::string symbol_name;
+    virtual double number() {
+      throw std::runtime_error("<assign partial> is non-numeric");
     }
+    virtual std::string string() { return "<assign partial>"; }
+    virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &a) {
+      return i.variables[symbol_name] = i.run(a);
+    };
   };
 
 public:
-  virtual Value run(Interpreter &, ast::Node a) {
-    auto sym = std::get_if<ast::Symbol>(&a);
-    if (!sym)
-      throw std::runtime_error("attempting to assign to non-symbol");
-    return std::shared_ptr<CFunction>(new AssignPartial(sym->name));
+  virtual double number() {
+    throw std::runtime_error("<assign> is non-numeric");
+  }
+  virtual std::string string() { return "<assign>"; }
+  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &a) {
+    auto symbol = std::get_if<ast::Symbol>(&a);
+    if (symbol)
+      return std::make_shared<AssignPartial>(symbol->name);
+    throw std::runtime_error("cannot assign to non-symbol");
   };
 };
 
 export void load_all(Interpreter &i) {
-  i.variables["+"] =
-      std::make_unique<Value>(std::shared_ptr<CFunction>(new Add()));
-  i.variables["print"] =
-      std::make_unique<Value>(std::shared_ptr<CFunction>(new Print()));
-  i.variables["="] =
-      std::make_unique<Value>(std::shared_ptr<CFunction>(new Assign()));
+  i.variables["+"] = std::make_shared<Add>();
+  i.variables["="] = std::make_unique<Assign>();
 }
 
 } // namespace upl2::interpreter::builtins

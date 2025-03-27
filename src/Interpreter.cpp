@@ -1,5 +1,7 @@
 module;
 #include <memory>
+#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -12,51 +14,71 @@ namespace upl2::interpreter {
 
 export class Interpreter;
 
-export class CFunction;
+export class Value {
+public:
+  virtual ~Value() = 0;
+  virtual double number() = 0;
+  virtual std::string string() = 0;
+  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &) = 0;
+};
 
-export typedef std::variant<double, std::shared_ptr<CFunction>> Value;
+Value ::~Value() {}
 
-export std::ostream &operator<<(std::ostream &s, Value &value) {
-  if (auto x = std::get_if<double>(&value)) {
-    s << *x;
-  } else if (std::get_if<std::shared_ptr<CFunction>>(&value)) {
-    s << "<function>";
-  }
+export std::ostream &operator<<(std::ostream &s, std::shared_ptr<Value> &v) {
+  s << v->string();
   return s;
 }
 
-export class CFunction {
+export class Number : public Value {
 public:
-  virtual ~CFunction() = 0;
-  virtual Value run(Interpreter &, ast::Node) = 0;
+  double value;
+
+  Number(double v) : value(v) {}
+  ~Number() = default;
+
+  virtual double number() { return value; };
+  virtual std::string string() {
+    std::ostringstream tmp;
+    tmp << value;
+    return tmp.str();
+  };
+  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &) {
+    throw std::runtime_error("numbers are not callable");
+  }
+  virtual std::shared_ptr<Value> copy() {
+    return std::make_shared<Number>(value);
+  };
 };
 
-CFunction::~CFunction() {}
-
-// typedef std::variant<double, Function> Value;
+export class CFunction : public Value {
+public:
+  virtual double number() {
+    throw std::runtime_error("functions are not numbers");
+  };
+  virtual std::string string() { return "<function>"; };
+};
 
 export class Interpreter {
 public:
-  std::unordered_map<std::string, std::unique_ptr<Value>> variables;
+  std::unordered_map<std::string, std::shared_ptr<Value>> variables;
 
-  Value run(ast::Node &node) {
-    return std::visit([this](auto &&a) -> Value { return run(a); }, node);
+  std::shared_ptr<Value> run(ast::Node &node) {
+    return std::visit([this](auto &&a) { return run(a); }, node);
   }
 
-  Value run(ast::Call &a) {
+  std::shared_ptr<Value> run(ast::Call &a) {
     auto fn = run(*a.functor.get());
 
-    if (auto f = std::get_if<std::shared_ptr<CFunction>>(&fn)) {
-      return f->get()->run(*this, *a.operand);
-    }
-
-    throw std::runtime_error("tried to call a non-function");
+    return fn->call(*this, *a.operand.get());
   }
 
-  Value run(ast::Number &n) { return n.value; }
-  Value run(ast::Symbol &s) {
+  std::shared_ptr<Value> run(ast::Number &n) {
+    return std::unique_ptr<Value>(new Number(n.value));
+  }
+
+  std::shared_ptr<Value> run(ast::Symbol &s) {
     if (variables.contains(s.name))
-      return *variables[s.name].get();
+      return variables[s.name];
     throw std::runtime_error("variable not defined");
   }
 };

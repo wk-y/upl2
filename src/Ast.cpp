@@ -11,10 +11,9 @@ export class Symbol;
 export class Number;
 export class Call;
 
-#define NODE_DEF export typedef std::variant<Symbol, Number, Call> Node;
-NODE_DEF
+export typedef std::variant<Symbol, Number, Call> Node;
 
-class Symbol {
+export class Symbol {
 
 public:
   std::string name;
@@ -24,7 +23,7 @@ public:
   bool operator==(Symbol &rhs) { return this->name == rhs.name; }
 };
 
-class Number {
+export class Number {
 public:
   double value;
 
@@ -34,7 +33,7 @@ public:
   bool operator==(Number &rhs) { return this->value == rhs.value; }
 };
 
-class Call {
+export class Call {
 public:
   Call(const Call &x) {
     functor = std::make_unique<Node>(*x.functor.get());

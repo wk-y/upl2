@@ -46,13 +46,13 @@ int main() {
       if (std::get_if<skip>(expected)) {
         // skip
       } else if (auto exp = std::get_if<double>(expected)) {
-        auto rptr = std::get_if<double>(&result);
+        auto rptr = dynamic_cast<upl2::interpreter::Number *>(result.get());
         if (!rptr) {
           std::cerr << "expected double\n";
           return 1;
         }
-        if (*rptr != *exp) {
-          std::cerr << "expected " << *exp << ", got " << *rptr << ".\n";
+        if (rptr->value != *exp) {
+          std::cerr << "expected " << *exp << ", got " << rptr << ".\n";
           return 1;
         }
       }
