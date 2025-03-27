@@ -16,6 +16,15 @@ export class CFunction;
 
 export typedef std::variant<double, std::shared_ptr<CFunction>> Value;
 
+export std::ostream &operator<<(std::ostream &s, Value &value) {
+  if (auto x = std::get_if<double>(&value)) {
+    s << *x;
+  } else if (std::get_if<std::shared_ptr<CFunction>>(&value)) {
+    s << "<function>";
+  }
+  return s;
+}
+
 export class CFunction {
 public:
   virtual ~CFunction() = 0;

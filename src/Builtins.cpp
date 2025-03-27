@@ -38,11 +38,7 @@ class Print : public CFunction {
 public:
   virtual Value run(Interpreter &i, ast::Node a) {
     auto value = i.run(a);
-    if (auto x = std::get_if<double>(&value)) {
-      std::cout << *x;
-    } else if (std::get_if<std::shared_ptr<CFunction>>(&value)) {
-      std::cout << "<c function>";
-    }
+    std::cout << value;
     return std::shared_ptr<CFunction>(new Print());
   };
 };

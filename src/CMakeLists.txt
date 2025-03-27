@@ -17,3 +17,8 @@ target_link_libraries(Interpreter PUBLIC Ast)
 add_library(Builtins)
 target_sources(Builtins PUBLIC FILE_SET CXX_MODULES FILES Builtins.cpp)
 target_link_libraries(Builtins PUBLIC Interpreter Ast)
+
+
+add_executable(Repl)
+target_sources(Repl PUBLIC Repl.cpp)
+target_link_libraries(Repl PUBLIC Builtins Interpreter Parser Token)
