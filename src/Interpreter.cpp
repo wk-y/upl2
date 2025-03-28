@@ -5,6 +5,7 @@ module;
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 
 export module Interpreter;
@@ -69,9 +70,12 @@ public:
   virtual std::string string() { return "<function>"; };
 };
 
+export class UserFunction;
+
 export class Interpreter {
 public:
   std::unordered_map<std::string, std::shared_ptr<Value>> variables;
+  std::unordered_map<std::string, std::shared_ptr<Value>> current_captures;
 
   std::shared_ptr<Value> run(ast::Node &node) {
     return std::visit([this](auto &&a) { return run(a); }, node);
@@ -95,6 +99,43 @@ public:
     if (variables.contains(s.name))
       return variables[s.name];
     throw std::runtime_error("variable not defined");
+  }
+};
+
+export class UserFunction : public Value {
+  template <typename T> class Switcher {
+    T *a, *b;
+
+  public:
+    Switcher(T *a_, T *b_) : a(a_), b(b_) { std::swap(*a, *b); }
+    ~Switcher() { std::swap(*a, *b); }
+  };
+
+  std::string param_name;
+  ast::Node body;
+
+public:
+  std::unordered_map<std::string, std::shared_ptr<Value>> captures;
+
+  UserFunction(
+      std::string param_, ast::Node body_,
+      std::unordered_map<std::string, std::shared_ptr<Value>> &&captures_)
+      : param_name(param_), body(body_), captures(captures_) {}
+  virtual double number() {
+    throw std::runtime_error("<user function> is non-numeric");
+  };
+  virtual std::string string() { return "<user function>"; }
+  virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &param) {
+    auto scope = captures;
+    scope[param_name] = i.run(param);
+    auto current_captures = scope;
+
+    Switcher<std::unordered_map<std::string, std::shared_ptr<Value>>> ss(
+        &i.variables, &scope);
+    Switcher<std::unordered_map<std::string, std::shared_ptr<Value>>> sc(
+        &i.current_captures, &current_captures);
+    auto r = i.run(body);
+    return r;
   }
 };
 

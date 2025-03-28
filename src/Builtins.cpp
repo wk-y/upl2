@@ -4,6 +4,7 @@ module;
 #include <stdexcept>
 #include <unordered_map>
 #include <variant>
+#include <vector>
 
 export module Builtins;
 import Interpreter;
@@ -96,10 +97,87 @@ public:
   };
 };
 
+class FuncOp : public Value {
+  class FuncOpPartial : public Value {
+    std::string parameter;
+
+  public:
+    FuncOpPartial(std::string s) : parameter(s) {}
+    virtual double number() {
+      throw std::runtime_error("<func partial> is non-numeric");
+    };
+    virtual std::string string() { return "<func partial>"; }
+    virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &n) {
+      std::unordered_map<std::string, std::shared_ptr<Value>> copy =
+          i.variables;
+      return std::make_shared<UserFunction>(parameter, n, std::move(copy));
+    }
+  };
+
+public:
+  virtual double number() { throw std::runtime_error("<func> is non-numeric"); }
+  virtual std::string string() { return "<func>"; }
+  virtual std::shared_ptr<Value> call(Interpreter &, ast::Node &a) {
+    auto parameter = std::get_if<ast::Symbol>(&a);
+    if (!parameter)
+      throw std::runtime_error("non-symbol passed to <func>");
+
+    return std::make_shared<FuncOpPartial>(parameter->name);
+  }
+};
+
+class Capture : public Value {
+  virtual double number() {
+    throw std::runtime_error("<capture> is non-numeric");
+  }
+  virtual std::string string() { return "<capture>"; }
+  virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &n) {
+    auto sym = std::get_if<ast::Symbol>(&n);
+    if (!sym) {
+      throw std::runtime_error("non-symbol passed to capture");
+    }
+    i.current_captures[sym->name] = i.variables[sym->name];
+    return std::make_shared<Capture>();
+  }
+};
+
+// todo: consider makig this a proper language feature
+class Let : public Value {
+  class LetPartial : public Value {
+    std::shared_ptr<Value> value;
+
+  public:
+    LetPartial(std::shared_ptr<Value> v) : value(v) {}
+
+    virtual double number() {
+      throw std::runtime_error("<let partial> is non-numeric");
+    }
+    virtual std::string string() { return "<let partial>"; }
+    virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &a) {
+      if (auto x = std::get_if<ast::Symbol>(&a)) {
+        if (x->name == "end")
+          return value;
+      }
+      auto v = i.run(a);
+      return std::make_shared<LetPartial>(v);
+    };
+  };
+
+public:
+  virtual double number() { throw std::runtime_error("<let> is non-numeric"); }
+  virtual std::string string() { return "<let>"; }
+  virtual std::shared_ptr<Value> call(Interpreter &i, ast::Node &a) {
+    return std::make_shared<LetPartial>(i.run(a));
+  };
+};
+
 export void load_all(Interpreter &i) {
   i.variables["+"] = std::make_shared<Add>();
-  i.variables["="] = std::make_unique<Assign>();
-  i.variables["concat"] = std::make_unique<Concat>();
+  i.variables["="] = std::make_shared<Assign>();
+  i.variables["concat"] = std::make_shared<Concat>();
+  i.variables["let"] = std::make_shared<Let>();
+  i.variables["=>"] = std::make_shared<FuncOp>();
+  i.variables["capture"] = std::make_shared<Capture>();
 }
 
 } // namespace upl2::interpreter::builtins

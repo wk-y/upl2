@@ -10,13 +10,12 @@ int main() {
   struct skip {};
   struct Test {
     std::string statements;
-    std::initializer_list<std::variant<double, skip>> expected;
-  } tests[] = {
-      {"(x = 1 + 2) (x + 4)", {3., 7.}},
-      {"(x = 3) (y = 5) (x + y)", {3., 5., 8.}},
-      {"((x) = 1) (x)", {1., 1.}},
-      {"((*) = (+)) (2 * 3)", {skip{}, 5.}},
-  };
+    std::initializer_list<std::variant<double, std::string, skip>> expected;
+  } tests[] = {{"(x = 1 + 2) (x + 4)", {3., 7.}},
+               {"(x = 3) (y = 5) (x + y)", {3., 5., 8.}},
+               {"((x) = 1) (x)", {1., 1.}},
+               {"((*) = (+)) (2 * 3)", {skip{}, 5.}},
+               {"((let (x = 5) (x + 1) end) + 3)", {9.}}};
 
   for (auto &test : tests) {
     std::istringstream s(test.statements);
@@ -46,13 +45,15 @@ int main() {
       if (std::get_if<skip>(expected)) {
         // skip
       } else if (auto exp = std::get_if<double>(expected)) {
-        auto rptr = dynamic_cast<upl2::interpreter::Number *>(result.get());
-        if (!rptr) {
-          std::cerr << "expected double\n";
+        auto actual = result->number();
+        if (actual != *exp) {
+          std::cerr << "expected " << *exp << ", got " << actual << ".\n";
           return 1;
         }
-        if (rptr->value != *exp) {
-          std::cerr << "expected " << *exp << ", got " << rptr << ".\n";
+      } else if (auto exp = std::get_if<std::string>(expected)) {
+        auto actual = result->string();
+        if (actual != *exp) {
+          std::cerr << "expected " << *exp << ", got " << actual << ".\n";
           return 1;
         }
       }
